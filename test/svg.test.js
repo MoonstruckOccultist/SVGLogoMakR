@@ -7,7 +7,7 @@ const questions = require('../index');
 describe('LogoMakR', () => {
     describe("acronym", () => {
         it('should return true when answer meets requirements', () => {
-            let input = "69c000";
+            let input = "ff0666";
             expect(questions[1].validate(input)).toBe(true);
         });
     });
