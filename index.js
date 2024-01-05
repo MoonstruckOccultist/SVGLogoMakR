@@ -1,152 +1,40 @@
 const inquirer = require('inquirer');
 const fs = require('fs');
-const { log } = require('console');
+
+// modular classes to render different shapes, could've been far easier and more effecient to just make them short functions but making them separate classes is what was asked
+const Circle = require('./shapes/circle');
+const Square = require('./shapes/square');
+const Triangle = require('./shapes/triangle')
+
+const questions = require('./shapes/questions')
 
 
 
 
-
-const questions = [
-    {
-        type: 'input',
-        name: 'acronym',
-        message: "Enter your company's acronym (3letters or less)",
-        validate(ans) {
-            if (ans.length < 4) {
-                return true;
-            }
-
-            throw Error('Must be less than 3 chars.')
-        },
-    },
-    {
-        type: 'input',
-        name: 'textColor',
-        message: "What hex color would you like the acronym's text? (6 chars, and without the #)",
-        validate(ans) {
-            // credit for the regex tests goes to the xpert learning assistant cause regex hard
-            function symbolCheckR(a) {
-                var pattern = /[!@#$%^&*(),.?":{}|<>]/;
-                if (pattern.test(a)) {
-                    return false;
-                } else {
-                    return true
-                }
-            }
-            function hexcodeCheckR(h) {
-                const pattern = /^[a-fA-F0-9]{6}$/;
-                return pattern.test(h);
-            }
-            if (ans.length == 6 && symbolCheckR(ans)) {
-                if (hexcodeCheckR(ans)) {
-                    return true;
-                } else {
-                    throw Error('must be a valid hexcode');
-                }
-            } else {
-                throw Error('Must have 6 characters and no symbols including the #');
-            }
-        },
-    },
-    {
-        type: 'list',
-        name: 'shape',
-        message: 'What shape would you like the logo to have?',
-        choices: [
-            'Square',
-            'Circle',
-            'Triangle',
-        ]
-    },
-    {
-        type: 'input',
-        name: 'shapeColor',
-        message: "What hex color would you like the acronym's text? (6 chars, and without the #)",
-        validate(ans) {
-            function symbolCheckR(a) {
-                var pattern = /[!@#$%^&*(),.?":{}|<>]/;
-                if (pattern.test(a)) {
-                    return false;
-                } else {
-                    return true
-                }
-            }
-            function hexcodeCheckR(h) {
-                const pattern = /^[a-fA-F0-9]{6}$/;
-                return pattern.test(h);
-            }
-            if (ans.length == 6 && symbolCheckR(ans)) {
-                if (hexcodeCheckR(ans)) {
-                    return true;
-                } else {
-                    throw Error('must be a valid hexcode');
-                }
-            } else {
-                throw Error('Must have 6 characters and no symbols including the #');
-            }
-        },
-    }
-]
-class Circle {
-    constructor(acro, aC, shapeC) {
-        this.acro = acro;
-        this.aC = aC;
-        this.shapeC = shapeC;
-    }
-    render() {
-        return `<svg width="300" height="200" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="150" cy="100" r="80" fill="#${shapeC}" />
-    <text x="150" y="120" font-size="60" text-anchor="middle" fill="#${aC}">${acro.toUpperCase()}</text>
-</svg>`;
-    }
-}
-class Square {
-    constructor(acro, aC, shapeC) {
-        this.acro = acro;
-        this.aC = aC;
-        this.shapeC = shapeC;
-    }
-    render() {
-        return `<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
-    <rect x="50" y="50" width="200" height="200" fill="#${shapeC}" />
-    <text x="125" y="140" font-size="50" text-anchor="middle" fill="#${aC}">${acro.toUpperCase()}</text>
-</svg>`;
-    }
-}
-class Triangle {
-    constructor(acro, aC, shapeC) {
-        this.acro = acro;
-        this.aC = aC;
-        this.shapeC = shapeC;
-    }
-    render() {
-        return `<svg version="1.1" width="300" height="200" xmlns="http://www.w3.org/2000/svg">
-    <polygon points="150, 18 244, 182 56, 182" fill="${shapeC}" />
-    <text x="150" y="140" font-size="40" text-anchor="middle" fill="#${aC}">${acro.toUpperCase()}</text>
-</svg>`
-    }
-}
-
-
-
-
+// initializes inquirer
 function init() {
     inquirer
+    // takes questions and prompts the user for input
         .prompt(questions)
         .then((data) => {
-            console.log(data)
-            console.log(data.shape)
+            // takes the data, obtains the shape, discerns what class should be called (probably coulda done a switch case but too late now)
             var sType = data.shape;
-            let logo = new [sType](data.acronym, data.textColor, data.shapeColor);
-            // DO IT THE HARD WAY I GUESS WITH A BILLION IF STATEMENTS
-            console.log(logo.render());
-            // TODO: make proper svg file and write it
+            let logo;
+            if (sType == "Circle"){
+                logo = new Circle(data.acronym, data.textColor, data.shapeColor)
+            }else if (sType == "Square"){
+                logo = new Square(data.acronym, data.textColor, data.shapeColor)
+            } else if (sType == "Triangle"){
+                logo = new Triangle(data.acronym, data.textColor, data.shapeColor)
+            } else {
+                return "error";
+            }
+            // takes the string from the shape render function and writes it to a svg file with the acronym's name
+            fs.writeFile(`./output/${data.acronym.toUpperCase()}.svg`, logo.render(), (err) => 
+                err ? console.log(err) : console.log('Hey it actually worked! created file will be in the "output" folder')
+            );
+        });
+};
 
-
-        })
-}
-
-// console.log(Circle('cum', 'ff0666', '000000'));
+// initiates the function
 init();
-
-module.exports = questions
